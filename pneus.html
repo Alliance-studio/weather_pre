@@ -38,6 +38,7 @@
         <!-- Cabeçalho -->
         <div class="flex justify-between items-center mb-3 border-b border-gray-600 pb-2">
             <h1 class="text-2xl font-bold tracking-widest text-gray-300 uppercase">Track Info</h1>
+            <h2>Aponta para o 192 da naqyuba</h2>
             <div id="connection-status" class="w-3 h-3 rounded-full bg-red-500" title="Estado da Ligação"></div>
         </div>
 
@@ -88,9 +89,9 @@
         let reconnectTimeout;
         let currentTry = 0;
 
-        // Obter IP e Porta dinamicamente da Webview
-        const host = window.location.hostname || '127.0.0.1';
-        const port = window.location.port || '8855';
+        // Como o ficheiro está alojado no GitHub, forçamos o IP da tua máquina local onde o Edge Overlays corre
+        const host = '192.168.1.64';
+        const port = '8855';
         
         // O Edge Overlays pode expor o WebSocket na root ou em caminhos específicos
         const endpoints = [
