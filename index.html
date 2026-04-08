@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iRacing Tempest Guide | Alpha MVP</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0: #0a0b0d;
+    --bg1: #0f1114;
+    --bg2: #151820;
+    --bg3: #1c2030;
+    --bg4: #232840;
+    --border: rgba(80,140,255,0.15);
+    --border2: rgba(80,140,255,0.3);
+    --accent: #4f8fff;
+    --accent2: #2dd4bf;
+    --accent3: #f59e0b;
+    --accent4: #ef4444;
+    --accent5: #22c55e;
+    --text: #e8eaf0;
+    --text2: #8b9ab8;
+    --text3: #4a5568;
+    --dry: #22c55e;
+    --vlw: #86efac;
+    --sw: #f59e0b;
+    --wet: #60a5fa;
+    --vwd: #3b82f6;
+    --soaked: #ef4444;
+    --font-main: 'Exo 2', sans-serif;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg0);
+    color: var(--text);
+    font-family: var(--font-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,143,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,143,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,11,13,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+  .logo {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo span { color: var(--text2); font-weight: 400; }
+  
+  .alpha-badge {
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.4);
+    color: var(--accent3);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    vertical-align: middle;
+  }
+
+  .nav {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    position: relative;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { color: var(--text); background: var(--bg3); }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 14px; right: 14px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 1px;
+  }
+  /* MAIN */
+  main { position: relative; z-index: 1; }
+  .page { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+  
+  /* SECTION TITLE */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .page-title {
+    font-family: var(--font-head);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .page-desc {
+    color: var(--text2);
+    font-size: 14px;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+  }
+  .card-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  /* ========== PAGE 1: GUIA ========== */
+  .conditions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 600px;
+  }
+  .conditions-table thead tr {
+    background: var(--bg3);
+  }
+  .conditions-table th {
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+  .conditions-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .conditions-table tbody tr { transition: background 0.1s; }
+  .conditions-table tbody tr:hover { background: var(--bg3); }
+  .cond-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .cond-dry    { color: var(--dry);    background: rgba(34,197,94,0.1);   border-color: rgba(34,197,94,0.3);   }
+  .cond-vlw    { color: var(--vlw);    background: rgba(134,239,172,0.1); border-color: rgba(134,239,172,0.3); }
+  .cond-sw     { color: var(--sw);     background: rgba(245,158,11,0.1);  border-color: rgba(245,158,11,0.3);  }
+  .cond-wet    { color: var(--wet);    background: rgba(96,165,250,0.1);  border-color: rgba(96,165,250,0.3);  }
+  .cond-vwd    { color: var(--vwd);    background: rgba(59,130,246,0.1);  border-color: rgba(59,130,246,0.3);  }
+  .cond-soaked { color: var(--soaked); background: rgba(239,68,68,0.1);   border-color: rgba(239,68,68,0.3);   }
+  
+  .tyre-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .tyre-slick  { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .tyre-risk   { background: rgba(245,158,11,0.08); color: #f59e0b; border: 1px dashed rgba(245,158,11,0.4); }
+  .tyre-wet    { background: rgba(96,165,250,0.15); color: #93c5fd; border: 1px solid rgba(96,165,250,0.3); }
+  
+  .strat-text  { color: var(--text); font-size: 13px; }
+  .strat-warn  { color: var(--sw); font-size: 13px; font-weight: 500; }
+  .strat-danger { color: var(--soaked); font-size: 13px; font-weight: 500; }
+  
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .tip-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+  }
+  .tip-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .tip-title {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .tip-body {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .tip-body strong { color: var(--text); font-weight: 500; }
+  
+  /* ========== PAGE 2: RACE PLANNER ========== */
+  .planner-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 800px) { .planner-grid { grid-template-columns: 1fr; } }
+  
+  .form-group { margin-bottom: 1rem; }
+  .form-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-main);
+    font-size: 14px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+  .form-textarea { resize: vertical; min-height: 100px; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-select option { background: var(--bg2); }
+  
+  .hour-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hour-row:last-child { border-bottom: none; }
+  .hour-label { font-family: var(--font-mono); font-size: 12px; color: var(--text2); }
+  
+  .cond-select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 4px 8px;
+    outline: none;
+    width: 100%;
+    appearance: none;
+  }
+  .cond-select option { background: var(--bg2); }
+  
+  .plan-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .plan-btn:hover { background: #3a78f5; }
+  .plan-btn:active { transform: scale(0.98); }
+  .plan-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+  
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .timeline-item:last-child { border-bottom: none; }
+  .tl-time {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text2);
+    min-width: 50px;
+    padding-top: 2px;
+  }
+  .tl-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .tl-body { flex: 1; }
+  .tl-action {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .tl-detail { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .tl-alert {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--sw);
+    margin-top: 6px;
+  }
+  
+  /* ========== PAGE 3: DECISION TREE ========== */
+  .tree-container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .dt-node {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .dt-question {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  .dt-context {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    background: var(--bg3);
+    border-radius: 6px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .dt-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .dt-opt {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    transition: all 0.15s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dt-opt:hover { border-color: var(--accent); background: var(--bg4); color: var(--accent); }
+  .dt-opt-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    border: 1px solid var(--border2);
+    font-family: var(--font-mono);
+    color: var(--text2);
+  }
+  
+  .dt-answer {
+    background: var(--bg2);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 1.25rem;
+  }
+  .dt-answer-title {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+  .dt-answer-body {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+  .dt-answer-body strong { color: var(--text); }
+  .dt-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dt-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .dt-step-num {
+    background: var(--accent);
+    color: #fff;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  
+  .dt-restart {
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text2);
+    font-family: var(--font-head);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.15s;
+    display: block;
+  }
+  .dt-restart:hover { color: var(--text); border-color: var(--text2); }
+  
+  .dt-breadcrumb {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .dt-crumb { display: flex; align-items: center; gap: 6px; }
+  .dt-crumb-sep { color: var(--text3); }
+  .dt-crumb-label { color: var(--text2); }
+  .dt-crumb-value { color: var(--accent); }
+  
+  /* ========== PAGE 4: PIT STRATEGY ========== */
+  .pit-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 800px) { .pit-grid { grid-template-columns: 1fr; } }
+  
+  .pit-result-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .pit-stat {
+    background: var(--bg3);
+    border-radius: 6px;
+    padding: 12px 16px;
+  }
+  .pit-stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 4px;
+  }
+  .pit-stat-value {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .pit-stat-unit {
+    font-size: 12px;
+    color: var(--text2);
+    margin-left: 4px;
+  }
+  
+  .strategy-bar {
+    height: 40px;
+    border-radius: 6px;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .strat-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.9);
+    transition: flex 0.4s ease;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0 4px;
+  }
+  .strat-seg-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .pit-windows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pit-window {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg3);
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+  .pit-window-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pit-window-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text2);
+    flex: 1;
+  }
+  .pit-window-range {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .optimal-window {
+    border: 1px solid rgba(79,143,255,0.3);
+  }
+  
+  /* ========== PAGE 5: CHEAT SHEETS ========== */
+  .car-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .car-tab {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    font-family: var(--font-head);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .car-tab:hover { border-color: var(--border2); color: var(--text); }
+  .car-tab.active { background: var(--bg4); border-color: var(--accent); color: var(--accent); }
+  
+  .car-sheet { display: none; }
+  .car-sheet.active { display: block; }
+  
+  .sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .sheet-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+  }
+  .sheet-card-title {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sheet-card-title::before {
+    content: ''; display: inline-block;
+    width: 3px; height: 12px;
+    background: var(--accent2);
+    border-radius: 2px;
+  }
+  .sheet-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .sheet-row:last-child { border-bottom: none; }
+  .sheet-key { color: var(--text2); }
+  .sheet-val { color: var(--text); font-family: var(--font-mono); font-size: 12px; }
+  .sheet-val-good { color: var(--dry); }
+  .sheet-val-warn { color: var(--sw); }
+  .sheet-val-bad  { color: var(--soaked); }
+  
+  .car-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .car-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: var(--font-head);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .car-meta { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .car-meta strong { color: var(--text); font-weight: 500; }
+  
+  .rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .rating-bar:last-child { border-bottom: none; }
+  .rating-key { color: var(--text2); width: 140px; flex-shrink: 0; }
+  .rating-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg4);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .rating-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+  .rating-fill.good { background: var(--dry); }
+  .rating-fill.warn { background: var(--sw); }
+  .rating-fill.bad  { background: var(--soaked); }
+  .rating-val { font-family: var(--font-mono); font-size: 11px; color: var(--text2); width: 30px; text-align: right; }
+  
+  /* TAG */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-info  { background: rgba(79,143,255,0.12); color: var(--accent); border: 1px solid rgba(79,143,255,0.25); }
+  .tag-warn  { background: rgba(245,158,11,0.12); color: var(--sw);     border: 1px solid rgba(245,158,11,0.25); }
+  .tag-danger{ background: rgba(239,68,68,0.12);  color: var(--soaked); border: 1px solid rgba(239,68,68,0.25); }
+  .tag-ok    { background: rgba(34,197,94,0.12);  color: var(--dry);    border: 1px solid rgba(34,197,94,0.25); }
+  
+  /* MISC */
+  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    iRacing <span>// Tempest Guide</span>
+    <span class="alpha-badge">MVP CONCEPT</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('guia',this)">Guide</button>
+    <button class="nav-btn" onclick="showPage('planner',this)">Race Planner</button>
+    <button class="nav-btn" onclick="showPage('tree',this)">Decision Tree</button>
+    <button class="nav-btn" onclick="showPage('pit',this)">Pit Strategy</button>
+    <button class="nav-btn" onclick="showPage('sheets',this)">Cheat Sheets</button>
+    <button class="nav-btn" onclick="showPage('feedback',this)" style="color:var(--accent3)">Feedback</button>
+  </nav>
+</header>
+
+<main>
+<!-- ===== PAGE: GUIA ===== -->
+<div class="page active" id="page-guia">
+  <div class="section-label">Tempest System</div>
+  <div class="page-title">Track States — GR86 Baseline</div>
+  <div class="page-desc">
+    This tool is an <strong>Alpha concept</strong> we are exploring to help drivers navigate the rain. <br>
+    Quick reference for tyre choice and strategy by track condition. Use F9 + Weather Radar to monitor in real-time.
+  </div>
+  
+  <div class="card">
+    <table class="conditions-table">
+      <thead>
+        <tr>
+          <th>Condition (UI)</th>
+          <th>Tyre</th>
+          <th>Strategy / When to change</th>
+          <th>Risk</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="cond-badge cond-dry">Dry</span></td>
+          <td><span class="tyre-badge tyre-slick">Slicks</span></td>
+          <td class="strat-text">Dry track. Maximum grip. No worries.</td>
+          <td><span class="tag tag-ok">low</span></td>
+        </tr>
+        <tr>
+          <td><span class="cond-badge cond-vlw">Very Lightly Wet</span></td>
+          <td><span class="tyre-badge tyre-slick">Slicks</span></td>
+          <td class="strat-text">Just dampness. Wet tyres <strong>melt here</strong> — keep Slicks.</td>
+          <td><span class="tag tag-ok">low</span></td>
+        </tr>
+        <tr>
+          <td><span class="cond-badge cond-sw">Slightly Wet</span></td>
+          <td><span class="tyre-badge tyre-risk">Slicks ⚠</span></td>
+          <td class="strat-warn">Critical transition. If there's a dry line → keep Slicks. If rain is increasing → prepare Wets.</td>
+          <td><span class="tag tag-warn">medium</span></td>
+        </tr>
+        <tr>
+          <td><span class="cond-badge cond-sw">Slightly Wet</span></td>
+          <td><span class="tyre-badge tyre-wet">Wet</span></td>
+          <td class="strat-text">If rain is increasing on the radar — pit for Wets immediately.</td>
+          <td><span class="tag tag-warn">medium</span></td>
+        </tr>
+        <tr>
+          <td><span class="cond-badge cond-wet">Wet</span></td>
+          <td><span class="tyre-badge tyre-wet">Wet</span></td>
+          <td class="strat-text">Visible spray. Wet tyres mandatory. No discussion.</td>
+          <td><span class="tag tag-warn">high</span></td>
+        </tr>
+        <tr>
+          <td><span class="cond-badge cond-vwd">Very Wet / Damp</span></td>
+          <td><span class="tyre-badge tyre-wet">Wet</span></td>
+          <td class="strat-danger">Beware of puddles. High aquaplaning risk. Reduce speed in low track areas.</td>
+          <td><span class="tag tag-danger">high</span></td>
+        </tr>
+        <tr>
+          <td><span class="cond-badge cond-soaked">Soaked</span></td>
+          <td><span class="tyre-badge tyre-wet">Wet</span></td>
+          <td class="strat-danger">Rivers on track. Survival mode — avoid kerbs, reduce aggressiveness entirely.</td>
+          <td><span class="tag tag-danger">critical</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="divider"></div>
+  <div class="section-label">F9 & Radar Monitoring</div>
+  
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-icon">🌡</div>
+      <div class="tip-title">F9 — Tyres</div>
+      <div class="tip-body">If your Wets are <strong>orange/red</strong>, the track is drying. Look for puddles to cool them or pit for Slicks.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">👁</div>
+      <div class="tip-title">Visual Spray</div>
+      <div class="tip-body">Cars ahead <strong>stopped lifting spray</strong>? The track is drying. Consider switching to Slicks.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">📡</div>
+      <div class="tip-title">Weather Radar</div>
+      <div class="tip-body"><strong>Yellow/Orange patches</strong> on radar = heavy rain. Prepare Wets before it hits your sector.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🏁</div>
+      <div class="tip-title">Drying Track</div>
+      <div class="tip-body">Running Slicks on the <strong>dry line</strong> (even if wet off-line) yields significant lap time gains.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: RACE PLANNER ===== -->
+<div class="page" id="page-planner">
+  <div class="section-label">Race Setup</div>
+  <div class="page-title">Race Planner</div>
+  <div class="page-desc">Configure your session's hourly weather forecast to generate a tyre strategy timeline for the race.</div>
+  
+  <div class="planner-grid">
+    <div>
+      <div class="card">
+        <div class="card-title">Session</div>
+        <div class="form-group">
+          <label class="form-label">Track</label>
+          <select class="form-select" id="plan-track">
+            <option>Lime Rock Park</option>
+            <option>Watkins Glen</option>
+            <option>Sebring</option>
+            <option>Road Atlanta</option>
+            <option>Nürburgring GP</option>
+            <option>Spa-Francorchamps</option>
+            <option>Brands Hatch</option>
+            <option>Silverstone GP</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Time</label>
+          <input class="form-input" type="time" id="plan-start" value="13:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duration (minutes)</label>
+          <input class="form-input" type="number" id="plan-duration" value="45" min="10" max="180">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Initial Track State</label>
+          <select class="form-select" id="plan-initial">
+            <option value="dry">Dry</option>
+            <option value="vlw">Very Lightly Wet</option>
+            <option value="sw">Slightly Wet</option>
+            <option value="wet">Wet</option>
+            <option value="vwd">Very Wet / Damp</option>
+            <option value="soaked">Soaked</option>
+          </select>
+        </div>
+        
+        <div class="divider"></div>
+        <div class="card-title">Hourly Forecast</div>
+        <div id="hour-rows"></div>
+        
+        <button class="plan-btn" onclick="generatePlan()">Generate Strategy</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" id="plan-output">
+        <div class="card-title">Race Strategy</div>
+        <div class="empty-state">// Configure session and click Generate Strategy</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: DECISION TREE ===== -->
+<div class="page" id="page-tree">
+  <div class="section-label">Real Time</div>
+  <div class="page-title">Decision Tree</div>
+  <div class="page-desc">Use this during the race. Answer the questions to get the correct recommended action for your current situation.</div>
+  
+  <div class="tree-container">
+    <div class="dt-breadcrumb" id="dt-breadcrumb"></div>
+    <div id="dt-content"></div>
+  </div>
+</div>
+
+<!-- ===== PAGE: PIT STRATEGY ===== -->
+<div class="page" id="page-pit">
+  <div class="section-label">Calculator</div>
+  <div class="page-title">Pit Strategy Calculator</div>
+  <div class="page-desc">Calculates optimal pit windows and number of stops based on race duration, lap times, and tyre wear.</div>
+  
+  <div class="pit-grid">
+    <div>
+      <div class="card">
+        <div class="card-title">Parameters</div>
+        <div class="form-group">
+          <label class="form-label">Race Duration (min)</label>
+          <input class="form-input" type="number" id="pit-duration" value="45" min="10" max="300" oninput="calcPit()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lap Time (sec)</label>
+          <input class="form-input" type="number" id="pit-laptime" value="62" min="30" max="300" oninput="calcPit()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pit Time (sec)</label>
+          <input class="form-input" type="number" id="pit-pittime" value="28" min="10" max="120" oninput="calcPit()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Track Condition</label>
+          <select class="form-select" id="pit-cond" onchange="calcPit()">
+            <option value="dry">Dry (Slicks)</option>
+            <option value="wet">Wet (Wet tyres)</option>
+            <option value="mixed">Mixed (Transition)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tyre Wear (%/lap)</label>
+          <input class="form-input" type="number" id="pit-wear" value="1.8" min="0.5" max="10" step="0.1" oninput="calcPit()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Safety Car Risk</label>
+          <select class="form-select" id="pit-sc" onchange="calcPit()">
+            <option value="low">Low</option>
+            <option value="med">Medium</option>
+            <option value="high">High (Wet Track)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" id="pit-output">
+        <div class="card-title">Result</div>
+        <div class="empty-state">// Calculating...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: CHEAT SHEETS ===== -->
+<div class="page" id="page-sheets">
+  <div class="section-label">By Category</div>
+  <div class="page-title">Cheat Sheets</div>
+  <div class="page-desc">Specific characteristics for each car in Tempest. The same compound can behave very differently depending on the vehicle category.</div>
+  
+  <div class="car-tabs">
+    <button class="car-tab active" onclick="showCar('gr86',this)">GR86</button>
+    <button class="car-tab" onclick="showCar('mx5',this)">MX-5 Cup</button>
+    <button class="car-tab" onclick="showCar('porsche',this)">Porsche 911 Cup</button>
+    <button class="car-tab" onclick="showCar('skipbarber',this)">Skip Barber</button>
+    <button class="car-tab" onclick="showCar('vrs',this)">VRS GT3</button>
+  </div>
+  
+  <!-- GR86 -->
+  <div class="car-sheet active" id="car-gr86">
+    <div class="car-header">
+      <div class="car-badge">GR86</div>
+      <div class="car-meta">
+        <strong>Toyota GR86 Cup</strong> — Road Course Class<br>
+        RWD · Weight 1270 kg · Balanced for beginners
+      </div>
+    </div>
+    <div class="sheet-grid">
+      <div class="sheet-card">
+        <div class="sheet-card-title">Rain Behavior</div>
+        <div class="rating-bar"><span class="rating-key">Wet Stability</span><div class="rating-track"><div class="rating-fill good" style="width:75%"></div></div><span class="rating-val">7.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Aquaplaning Risk</span><div class="rating-track"><div class="rating-fill warn" style="width:45%"></div></div><span class="rating-val">4.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Tyre Pace</span><div class="rating-track"><div class="rating-fill good" style="width:70%"></div></div><span class="rating-val">7.0</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Slick Wear</span><div class="rating-track"><div class="rating-fill bad" style="width:80%"></div></div><span class="rating-val">8.0</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Crossover Thresholds</div>
+        <div class="sheet-row"><span class="sheet-key">Slick → Wet mandatory</span><span class="sheet-val sheet-val-warn">Slightly Wet+</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wets melt in</span><span class="sheet-val sheet-val-good">Dry / V.Lightly Wet</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slicks on dry line</span><span class="sheet-val sheet-val-good">OK up to Slightly Wet</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wet tyre duration</span><span class="sheet-val">~35-40 min damp track</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slick wear/lap</span><span class="sheet-val">~1.5-2.0% (dry track)</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">GR86 Specific Tips</div>
+        <div class="sheet-row"><span class="sheet-key">Rain Oversteer</span><span class="sheet-val sheet-val-warn">Medium — careful on exit</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wet Tyre warmup</span><span class="sheet-val">~2-3 laps</span></div>
+        <div class="sheet-row"><span class="sheet-key">Ideal rain line</span><span class="sheet-val">Off-line works ok</span></div>
+        <div class="sheet-row"><span class="sheet-key">Safety car advantage</span><span class="sheet-val sheet-val-good">Very High</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Warning Signs</div>
+        <div class="sheet-row"><span class="sheet-key">Slicks sliding early</span><span class="sheet-val sheet-val-danger">Pit Immediately</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wets overheating</span><span class="sheet-val sheet-val-warn">Track drying, prep Slicks</span></div>
+        <div class="sheet-row"><span class="sheet-key">Vibration on slicks</span><span class="sheet-val sheet-val-danger">Flat spot — pit</span></div>
+        <div class="sheet-row"><span class="sheet-key">Grip rear < 50%</span><span class="sheet-val sheet-val-danger">High spin risk</span></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MX-5 -->
+  <div class="car-sheet" id="car-mx5">
+    <div class="car-header">
+      <div class="car-badge">MX-5</div>
+      <div class="car-meta">
+        <strong>Mazda MX-5 Cup</strong> — Entry Level Class<br>
+        RWD · Weight 1120 kg · Highly sensitive to rain
+      </div>
+    </div>
+    <div class="sheet-grid">
+      <div class="sheet-card">
+        <div class="sheet-card-title">Rain Behavior</div>
+        <div class="rating-bar"><span class="rating-key">Wet Stability</span><div class="rating-track"><div class="rating-fill warn" style="width:55%"></div></div><span class="rating-val">5.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Aquaplaning Risk</span><div class="rating-track"><div class="rating-fill bad" style="width:65%"></div></div><span class="rating-val">6.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Tyre Pace</span><div class="rating-track"><div class="rating-fill good" style="width:80%"></div></div><span class="rating-val">8.0</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Slick Wear</span><div class="rating-track"><div class="rating-fill bad" style="width:90%"></div></div><span class="rating-val">9.0</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Crossover Thresholds</div>
+        <div class="sheet-row"><span class="sheet-key">Slick → Wet mandatory</span><span class="sheet-val sheet-val-danger">Very Lightly Wet+</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wets melt in</span><span class="sheet-val sheet-val-good">Only Dry</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slicks on dry line</span><span class="sheet-val sheet-val-warn">Only V.Lightly Wet</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wet tyre duration</span><span class="sheet-val">~40-50 min damp track</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slick wear/lap</span><span class="sheet-val">~1.2-1.6% (dry track)</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">MX-5 Specific Tips</div>
+        <div class="sheet-row"><span class="sheet-key">Rain Sensitivity</span><span class="sheet-val sheet-val-danger">High — swap early</span></div>
+        <div class="sheet-row"><span class="sheet-key">Rain Oversteer</span><span class="sheet-val sheet-val-danger">High — smooth entries</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wet Tyre warmup</span><span class="sheet-val">~1-2 laps</span></div>
+        <div class="sheet-row"><span class="sheet-key">Safety car advantage</span><span class="sheet-val sheet-val-good">Very High</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Warning Signs</div>
+        <div class="sheet-row"><span class="sheet-key">Rear snap oversteer</span><span class="sheet-val sheet-val-danger">Typical on damp Slicks</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wets overheating</span><span class="sheet-val sheet-val-warn">Fast drying track — pit</span></div>
+        <div class="sheet-row"><span class="sheet-key">Front spray</span><span class="sheet-val sheet-val-warn">Check radar immediately</span></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Porsche -->
+  <div class="car-sheet" id="car-porsche">
+    <div class="car-header">
+      <div class="car-badge">911</div>
+      <div class="car-meta">
+        <strong>Porsche 911 GT3 Cup</strong> — Cup Class<br>
+        RWD · Rear Engine · Beware of braking oversteer
+      </div>
+    </div>
+    <div class="sheet-grid">
+      <div class="sheet-card">
+        <div class="sheet-card-title">Rain Behavior</div>
+        <div class="rating-bar"><span class="rating-key">Wet Stability</span><div class="rating-track"><div class="rating-fill warn" style="width:60%"></div></div><span class="rating-val">6.0</span></div>
+        <div class="rating-bar"><span class="rating-key">Aquaplaning Risk</span><div class="rating-track"><div class="rating-fill warn" style="width:55%"></div></div><span class="rating-val">5.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Tyre Pace</span><div class="rating-track"><div class="rating-fill warn" style="width:60%"></div></div><span class="rating-val">6.0</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Slick Wear</span><div class="rating-track"><div class="rating-fill bad" style="width:85%"></div></div><span class="rating-val">8.5</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Crossover Thresholds</div>
+        <div class="sheet-row"><span class="sheet-key">Slick → Wet mandatory</span><span class="sheet-val sheet-val-warn">Slightly Wet</span></div>
+        <div class="sheet-row"><span class="sheet-key">Rear engine beware</span><span class="sheet-val sheet-val-danger">Overheating in Wets</span></div>
+        <div class="sheet-row"><span class="sheet-key">Rain braking</span><span class="sheet-val sheet-val-danger">Reduce 30-40% distance</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slick wear/lap</span><span class="sheet-val">~2.0-2.5% (dry track)</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">911 Specific Tips</div>
+        <div class="sheet-row"><span class="sheet-key">Worst rain zone</span><span class="sheet-val sheet-val-danger">Slow corner exit</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wet Tyre warmup</span><span class="sheet-val">~3-4 laps</span></div>
+        <div class="sheet-row"><span class="sheet-key">Ideal position</span><span class="sheet-val">Conventional line</span></div>
+        <div class="sheet-row"><span class="sheet-key">Safety car advantage</span><span class="sheet-val sheet-val-warn">Medium</span></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Skip Barber -->
+  <div class="car-sheet" id="car-skipbarber">
+    <div class="car-header">
+      <div class="car-badge">SB F2000</div>
+      <div class="car-meta">
+        <strong>Skip Barber Formula 2000</strong> — Formula Class<br>
+        Open Wheel · Extremely sensitive · No weather protection
+      </div>
+    </div>
+    <div class="sheet-grid">
+      <div class="sheet-card">
+        <div class="sheet-card-title">Rain Behavior</div>
+        <div class="rating-bar"><span class="rating-key">Wet Stability</span><div class="rating-track"><div class="rating-fill bad" style="width:35%"></div></div><span class="rating-val">3.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Aquaplaning Risk</span><div class="rating-track"><div class="rating-fill bad" style="width:80%"></div></div><span class="rating-val">8.0</span></div>
+        <div class="rating-bar"><span class="rating-key">Gradual Grip Loss</span><div class="rating-track"><div class="rating-fill bad" style="width:25%"></div></div><span class="rating-val">2.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Slick Wear</span><div class="rating-track"><div class="rating-fill bad" style="width:95%"></div></div><span class="rating-val">9.5</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Critical Alerts</div>
+        <div class="sheet-row"><span class="sheet-key">Rain appears</span><span class="sheet-val sheet-val-danger">PIT IMMEDIATELY</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slicks on damp</span><span class="sheet-val sheet-val-danger">Loses grip with no warning</span></div>
+        <div class="sheet-row"><span class="sheet-key">Danger zone</span><span class="sheet-val sheet-val-danger">Any corner > 80 km/h</span></div>
+        <div class="sheet-row"><span class="sheet-key">General advice</span><span class="sheet-val sheet-val-danger">Be the first to pit</span></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- VRS GR3 -->
+  <div class="car-sheet" id="car-vrs">
+    <div class="car-header">
+      <div class="car-badge">GT3</div>
+      <div class="car-meta">
+        <strong>GT3 (VRS / Multi-class)</strong> — GT3 Class<br>
+        RWD · GT Aerodynamics · More stable in rain conditions
+      </div>
+    </div>
+    <div class="sheet-grid">
+      <div class="sheet-card">
+        <div class="sheet-card-title">Rain Behavior</div>
+        <div class="rating-bar"><span class="rating-key">Wet Stability</span><div class="rating-track"><div class="rating-fill good" style="width:80%"></div></div><span class="rating-val">8.0</span></div>
+        <div class="rating-bar"><span class="rating-key">Aquaplaning Risk</span><div class="rating-track"><div class="rating-fill good" style="width:35%"></div></div><span class="rating-val">3.5</span></div>
+        <div class="rating-bar"><span class="rating-key">Wet Slick Wear</span><div class="rating-track"><div class="rating-fill warn" style="width:70%"></div></div><span class="rating-val">7.0</span></div>
+        <div class="rating-bar"><span class="rating-key">Grip Recovery</span><div class="rating-track"><div class="rating-fill good" style="width:75%"></div></div><span class="rating-val">7.5</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Crossover Thresholds</div>
+        <div class="sheet-row"><span class="sheet-key">Slick → Wet</span><span class="sheet-val sheet-val-warn">Wet / Very Wet</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slicks on Slightly Wet</span><span class="sheet-val sheet-val-good">OK with dry line</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wet tyre duration</span><span class="sheet-val">~50-70 min damp track</span></div>
+        <div class="sheet-row"><span class="sheet-key">Slick wear/lap</span><span class="sheet-val">~1.8-2.2% (dry track)</span></div>
+      </div>
+      <div class="sheet-card">
+        <div class="sheet-card-title">Rain Advantage</div>
+        <div class="sheet-row"><span class="sheet-key">Downforce helps</span><span class="sheet-val sheet-val-good">Yes — very stable</span></div>
+        <div class="sheet-row"><span class="sheet-key">Lap-to-lap consistency</span><span class="sheet-val sheet-val-good">High</span></div>
+        <div class="sheet-row"><span class="sheet-key">Wet pit advantage</span><span class="sheet-val sheet-val-good">High — great compensation</span></div>
+        <div class="sheet-row"><span class="sheet-key">Safety car timing</span><span class="sheet-val sheet-val-good">Excellent window</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: FEEDBACK ===== -->
+<div class="page" id="page-feedback">
+  <div class="section-label">Help us build this</div>
+  <div class="page-title">Have Your Say!</div>
+  <div class="page-desc">
+    This tool is currently a <strong>Work-in-Progress Concept (MVP)</strong> we are exploring to see if it's useful for the iRacing community. <br>
+    Please submit your feedback below — feature requests, bug reports, or general thoughts — and help shape the final version.
+  </div>
+  
+  <div class="planner-grid" style="grid-template-columns: 1fr; max-width: 600px; margin: 0 auto;">
+    <div class="card">
+      <div class="card-title">Submit Feedback</div>
+      <form id="feedback-form" onsubmit="submitFeedback(event)">
+        <div class="form-group">
+          <label class="form-label">Name / Discord (Optional)</label>
+          <input class="form-input" type="text" name="name" placeholder="e.g. AyrtonS#1234">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Feedback Type</label>
+          <select class="form-select" name="type" required>
+            <option value="" disabled selected>Select an option...</option>
+            <option value="Feature Request">💡 Feature Request</option>
+            <option value="Bug Report">🐛 Bug / Incorrect Info Report</option>
+            <option value="General Feedback">💬 General Feedback / Thoughts</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Message</label>
+          <textarea class="form-textarea" name="message" placeholder="What's on your mind?..." required></textarea>
+        </div>
+        <button type="submit" class="plan-btn" id="feedback-btn">Submit Feedback</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ===== NAVIGATION =====
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'tree') initTree();
+  if (id === 'pit') calcPit();
+  if (id === 'planner') buildHourRows();
+}
+
+function showCar(id, btn) {
+  document.querySelectorAll('.car-sheet').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.car-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('car-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===== FEEDBACK SUBMISSION (GOOGLE SHEETS INTEGRATION) =====
+function submitFeedback(e) {
+  e.preventDefault();
+  const btn = document.getElementById('feedback-btn');
+  const form = document.getElementById('feedback-form');
+  
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  /* * NO-BACKEND GOOGLE SHEETS INTEGRATION INSTRUCTIONS:
+   * 1. Go to Google Sheets, create a new sheet with columns: Timestamp, Name, Type, Message
+   * 2. Extensions > Apps Script
+   * 3. Paste this code inside Code.gs:
+   * * function doPost(e) {
+   * var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+   * var rowData = [
+   * new Date(),
+   * e.parameter.name,
+   * e.parameter.type,
+   * e.parameter.message
+   * ];
+   * sheet.appendRow(rowData);
+   * return ContentService.createTextOutput(JSON.stringify({ 'result': 'success' })).setMimeType(ContentService.MimeType.JSON);
+   * }
+   * * 4. Deploy > New Deployment > Type: Web App. 
+   * Execute as: Me. Who has access: Anyone.
+   * 5. Copy the Web App URL and paste it below inside `scriptURL`.
+   * 6. Uncomment the fetch code below and delete the setTimeout simulation.
+   */
+
+  // const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+  // const formData = new FormData(form);
+
+  // fetch(scriptURL, { method: 'POST', body: formData })
+  //   .then(response => {
+  //     btn.textContent = 'Sent! Thank you.';
+  //     form.reset();
+  //     setTimeout(() => { btn.textContent = 'Submit Feedback'; btn.disabled = false; }, 3000);
+  //   })
+  //   .catch(error => {
+  //     console.error('Error!', error.message);
+  //     btn.textContent = 'Error sending. Try again.';
+  //     setTimeout(() => { btn.textContent = 'Submit Feedback'; btn.disabled = false; }, 3000);
+  //   });
+
+  // --- SIMULATION FOR MVP PREVIEW (Remove when using fetch) ---
+  setTimeout(() => {
+    btn.textContent = 'Sent! Thank you.';
+    form.reset();
+    setTimeout(() => { 
+      btn.textContent = 'Submit Feedback'; 
+      btn.disabled = false; 
+    }, 3000);
+  }, 1000);
+  // -----------------------------------------------------------
+}
+
+// ===== RACE PLANNER =====
+const condLabels = {
+  dry: 'Dry', vlw: 'Very Lightly Wet', sw: 'Slightly Wet',
+  wet: 'Wet', vwd: 'Very Wet/Damp', soaked: 'Soaked'
+};
+const condColors = {
+  dry:'#22c55e', vlw:'#86efac', sw:'#f59e0b', wet:'#60a5fa', vwd:'#3b82f6', soaked:'#ef4444'
+};
+const tyreForCond = { dry:'Slicks', vlw:'Slicks', sw:'Slicks ⚠ / Wet', wet:'Wet', vwd:'Wet', soaked:'Wet' };
+
+function buildHourRows() {
+  const start = document.getElementById('plan-start').value || '13:00';
+  const dur = parseInt(document.getElementById('plan-duration').value) || 45;
+  const [h, m] = start.split(':').map(Number);
+  const startMin = h * 60 + m;
+  const hours = Math.ceil(dur / 60) + 1;
+  let html = '';
+  for (let i = 0; i < hours; i++) {
+    const t = startMin + i * 60;
+    const lh = Math.floor(t / 60) % 24;
+    const lm = t % 60;
+    const label = String(lh).padStart(2,'0') + ':' + String(lm).padStart(2,'0');
+    html += `<div class="hour-row">
+      <span class="hour-label">${label}</span>
+      <select class="cond-select" id="hcond-${i}">
+        ${Object.entries(condLabels).map(([v,l]) => `<option value="${v}">${l}</option>`).join('')}
+      </select>
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--text3);">${tyreForCond[Object.keys(condLabels)[0]]}</span>
+    </div>`;
+  }
+  document.getElementById('hour-rows').innerHTML = html;
+  for (let i = 0; i < hours; i++) {
+    const sel = document.getElementById('hcond-' + i);
+    if (sel) sel.addEventListener('change', updateHourTyre);
+  }
+}
+
+function updateHourTyre(e) {
+  const v = e.target.value;
+  const row = e.target.closest('.hour-row');
+  const span = row.querySelector('span:last-child');
+  span.textContent = tyreForCond[v];
+  span.style.color = condColors[v];
+}
+
+function generatePlan() {
+  const start = document.getElementById('plan-start').value || '13:00';
+  const dur = parseInt(document.getElementById('plan-duration').value) || 45;
+  const track = document.getElementById('plan-track').value;
+  const [h, m] = start.split(':').map(Number);
+  const startMin = h * 60 + m;
+  const hours = Math.ceil(dur / 60) + 1;
+  let events = [];
+  let prevTyre = null;
+  
+  for (let i = 0; i < hours; i++) {
+    const sel = document.getElementById('hcond-' + i);
+    if (!sel) continue;
+    const cond = sel.value;
+    const t = startMin + i * 60;
+    const tStr = String(Math.floor(t/60)%24).padStart(2,'0') + ':' + String(t%60).padStart(2,'0');
+    let tyre = (cond === 'dry' || cond === 'vlw') ? 'Slicks' : 'Wet';
+    if (cond === 'sw') tyre = prevTyre || 'Slicks';
+    if (prevTyre !== tyre) {
+      events.push({ time: tStr, cond, tyre, prev: prevTyre });
+      prevTyre = tyre;
+    }
+  }
+  
+  let html = `<div class="card-title">Strategy — ${track}</div>`;
+  if (events.length === 0) {
+    html += `<div style="color:var(--text2);font-size:14px;padding:1rem 0;">Stable track during the entire race. No swaps required.</div>`;
+  } else {
+    html += `<div style="margin-bottom:1.5rem;">`;
+    events.forEach(ev => {
+      const color = condColors[ev.cond];
+      const isChange = ev.prev !== null;
+      const alertMsg = ev.cond === 'sw'
+        ? 'Monitor radar. If rain increases, prep Wets.'
+        : ev.cond === 'wet' || ev.cond === 'vwd' || ev.cond === 'soaked'
+        ? 'Prep Wets on the lap prior to pitting.'
+        : 'Confirm dry track before mounting Slicks.';
+      html += `<div class="timeline-item">
+        <span class="tl-time">${ev.time}</span>
+        <span class="tl-dot" style="background:${color}"></span>
+        <div class="tl-body">
+          <div class="tl-action">${isChange ? '🔄 Swap to ' + ev.tyre : '🏁 Start — ' + ev.tyre}</div>
+          <div class="tl-detail">Condition: ${condLabels[ev.cond]}</div>
+          ${isChange ? `<div class="tl-alert">${alertMsg}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  
+  const endMin = startMin + dur;
+  const endStr = String(Math.floor(endMin/60)%24).padStart(2,'0') + ':' + String(endMin%60).padStart(2,'0');
+  html += `<div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem;">
+    <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:12px;color:var(--text2);">
+      <span>Start: ${start}</span>
+      <span>Estimated End: ${endStr}</span>
+      <span>Duration: ${dur} min</span>
+    </div>
+  </div>`;
+  document.getElementById('plan-output').innerHTML = html;
+}
+
+// ===== DECISION TREE =====
+const tree = {
+  id: 'start',
+  q: 'What is the current race situation?',
+  ctx: 'Answer as close to reality as possible. Recommendations are based on GR86 Tempest baseline but apply to most cars.',
+  opts: [
+    { label: "It's starting to rain", icon: '🌧', next: 'rain_start' },
+    { label: "I'm on Wets, track is drying", icon: '☀', next: 'drying' },
+    { label: "I don't know which tyre to use", icon: '?', next: 'which_tyre' },
+    { label: "Going to pit — which tyre?", icon: '🔧', next: 'pit_tyre' },
+    { label: 'Aquaplaning — lost control', icon: '⚠', next: 'aquaplaning' },
+  ]
+};
+
+const nodes = {
+  rain_start: {
+    q: 'How is the rain looking on the radar?',
+    ctx: 'Open the radar (button in the session UI) and check intensity.',
+    opts: [
+      { label: 'Yellow/Orange patches — growing', icon: '📡', next: 'ans_mount_wet' },
+      { label: 'Light, no clear pattern', icon: '💧', next: 'rain_light' },
+      { label: 'Radar is not visible to me', icon: '❓', next: 'rain_visual' },
+    ]
+  },
+  rain_light: {
+    q: 'Are the cars ahead lifting visible spray?',
+    ctx: 'Visible spray means enough moisture for Wets. No spray = keep Slicks.',
+    opts: [
+      { label: 'Yes, clear spray', icon: '💦', next: 'ans_mount_wet' },
+      { label: 'No, track seems dry', icon: '✓', next: 'ans_stay_slick' },
+      { label: "Can't see — I'm running alone", icon: '👁', next: 'ans_f9_check' },
+    ]
+  },
+  rain_visual: {
+    q: 'Can you feel the car sliding?',
+    ctx: 'On Slicks, any slip in the rain is a clear sign to pit.',
+    opts: [
+      { label: 'Yes — loose rear or understeer', icon: '⚠', next: 'ans_mount_wet' },
+      { label: 'No, the car feels normal', icon: '✓', next: 'ans_monitor' },
+    ]
+  },
+  drying: {
+    q: 'What is the current F9 status (Wet tyre temp)?',
+    ctx: 'Go to the black box → F9. If your Wets are orange/red, the track has dried out.',
+    opts: [
+      { label: 'Wets are orange or red', icon: '🔴', next: 'drying_confirm' },
+      { label: 'Wets are still blue/green', icon: '🔵', next: 'ans_stay_wet' },
+    ]
+  },
+  drying_confirm: {
+    q: 'Have the cars ahead stopped lifting spray?',
+    ctx: 'If the answer is yes for both conditions, it is time to mount Slicks.',
+    opts: [
+      { label: 'Yes — track clearly dry', icon: '☀', next: 'ans_mount_slick' },
+      { label: 'There is still some spray', icon: '💧', next: 'ans_wait_lap' },
+    ]
+  },
+  which_tyre: {
+    q: 'What track condition is shown in the UI (Session Info)?',
+    ctx: 'Go to Session Info → Track. Look at the Wetness field.',
+    opts: [
+      { label: 'Dry / Very Lightly Wet', icon: '☀', next: 'ans_stay_slick' },
+      { label: 'Slightly Wet', icon: '🌤', next: 'which_sw' },
+      { label: 'Wet / Very Wet / Soaked', icon: '🌧', next: 'ans_mount_wet' },
+    ]
+  },
+  which_sw: {
+    q: 'Is the rain increasing or decreasing?',
+    ctx: 'Slightly Wet is the crossover zone. The radar is your best ally here.',
+    opts: [
+      { label: 'Increasing — orange patches on radar', icon: '📈', next: 'ans_mount_wet' },
+      { label: 'Decreasing / Stable', icon: '📉', next: 'ans_slick_risk' },
+    ]
+  },
+  pit_tyre: {
+    q: 'What is the track condition right now?',
+    opts: [
+      { label: 'Dry or Very Lightly Wet', icon: '☀', next: 'ans_slicks_pit' },
+      { label: 'Slightly Wet and rain increasing', icon: '🌤', next: 'ans_wet_pit' },
+      { label: 'Wet or worse', icon: '🌧', next: 'ans_wet_pit' },
+    ]
+  },
+  aquaplaning: {
+    q: 'What tyres are you on right now?',
+    ctx: 'If you lost control due to aquaplaning, check the cause before adjusting.',
+    opts: [
+      { label: 'Slicks — missed the timing', icon: '⚠', next: 'ans_aqua_slick' },
+      { label: 'Wets — track is "Soaked"', icon: '💧', next: 'ans_aqua_wet' },
+    ]
+  },
+  
+  // ANSWERS
+  ans_mount_wet: {
+    answer: true,
+    title: 'Mount Wets — enter pit lane',
+    body: 'The rain is heavy enough to justify Wet tyres. <strong>Do not wait</strong> — every lap on wet Slicks is a crash risk.',
+    steps: [
+      'Communicate to your engineer (or mentally note) to pit this lap',
+      'Enter the pits at the next safe opportunity',
+      'Mount Wet tyres — request them in the pit box',
+      'For the first 2-3 laps, warm up the Wets with slightly slower trajectories',
+      'Return to normal pace once you feel full grip',
+    ]
+  },
+  ans_stay_slick: {
+    answer: true,
+    title: 'Keep Slicks — track still okay',
+    body: 'Moisture is not enough to justify Wets. Wet tyres <strong>melt</strong> in Very Lightly Wet conditions, losing several tenths per lap.',
+    steps: [
+      'Keep your current Slicks',
+      'Open the radar every 2-3 laps to monitor weather evolution',
+      'If spray appears ahead of you — recalculate immediately',
+      'Mentally prep a pit stop in case conditions shift',
+    ]
+  },
+  ans_f9_check: {
+    answer: true,
+    title: 'Check F9 and monitor closely',
+    body: 'Without visual cues, trust the F9 box and car feel. <strong>Prevention is better than reaction.</strong>',
+    steps: [
+      'Load F9 — check rear tyre temperatures',
+      'If rear tyres are excessively cold → moisture on track',
+      'Reduce aggression on braking and corner exits',
+      'Decide after 2 laps based on the car\'s handling',
+    ]
+  },
+  ans_monitor: {
+    answer: true,
+    title: 'Keep tyres and monitor',
+    body: 'The car is stable. Don\'t change now, but maintain maximum awareness.',
+    steps: [
+      'Open radar every 2 laps',
+      'Check F9 tyres if you sense grip loss',
+      'Mentally mark the next pit window as a potential swap',
+    ]
+  },
+  ans_stay_wet: {
+    answer: true,
+    title: 'Keep Wets — track still damp',
+    body: 'Your Wets are still in the right temperature window. Pitting early for Slicks on a damp track is a common mistake.',
+    steps: [
+      'Continue on current Wets',
+      'Re-check F9 in 3-4 laps',
+      'Look at the spray from cars ahead as confirmation',
+    ]
+  },
+  ans_mount_slick: {
+    answer: true,
+    title: 'Time to mount Slicks',
+    body: 'The track is dry enough. <strong>Whoever swaps first gains an advantage</strong> — Wets on the dry lose 1-2 sec/lap.',
+    steps: [
+      'Enter pit lane on the current or next lap',
+      'Mount Slicks — request in the pit box',
+      'First 2 laps: warm Slicks with progressive braking',
+      'Attack when you feel maximum grip',
+    ]
+  },
+  ans_wait_lap: {
+    answer: true,
+    title: 'Wait 1-2 laps before deciding',
+    body: 'There is still some moisture. Changing now is premature — the line between "worth it" and "mistake" is about 2 laps.',
+    steps: [
+      'Keep Wets for 1-2 more laps',
+      'Watch the spray from cars ahead',
+      'If it disappears completely → pit for Slicks',
+      'If it remains → stay on Wets',
+    ]
+  },
+  ans_slick_risk: {
+    answer: true,
+    title: 'Slicks with calculated risk',
+    body: 'Slightly Wet with improving conditions allows Slicks on the dry line, but <strong>be careful off-line</strong>.',
+    steps: [
+      'Keep Slicks for now',
+      'Stay strictly on the dry racing line',
+      'Avoid overtakes that require off-line moves',
+      'Monitor radar — if rain returns, pit immediately',
+    ]
+  },
+  ans_slicks_pit: {
+    answer: true,
+    title: 'Mount Slicks in the pit',
+    body: 'Track is dry or almost dry — Slicks are the clear choice.',
+    steps: [
+      'Request Slick tyres in the pit box',
+      'Confirm tyre set availability',
+      'Adjust pressures if needed',
+    ]
+  },
+  ans_wet_pit: {
+    answer: true,
+    title: 'Mount Wet tyres in the pit',
+    body: 'With a damp track, Wet tyres are mandatory. Do not leave the box on Slicks.',
+    steps: [
+      'Request Wet tyres in the pit box',
+      'Check pressures — Wets often work better with slightly lower pressure',
+      'Pit exit: be careful on cold wet tyres',
+    ]
+  },
+  ans_aqua_slick: {
+    answer: true,
+    title: 'Slicks in rain — pit urgently',
+    body: '<strong>Do not wait any longer</strong>. Running Slicks on a wet track means the next mistake could cost the race.',
+    steps: [
+      'Reduce speed immediately — do not try to make up lost time',
+      'Enter the pits this lap',
+      'Mount Wet tyres',
+      'Recover positions safely once back on track',
+    ]
+  },
+  ans_aqua_wet: {
+    answer: true,
+    title: 'Wets in Soaked — survival mode',
+    body: 'With Wet tyres on a "Soaked" track, aquaplaning happens in deep puddles. The car <strong>cannot grip mechanically</strong>.',
+    steps: [
+      'Reduce speed 15-20% below normal wet pace',
+      'Avoid low track areas (inside of corners, pooling zones)',
+      'Smooth inputs — avoid rapid steering',
+      'Keep your distance — others\' spray helps navigate',
+      'Survival > lap time',
+    ]
+  },
+};
+
+let dtPath = [];
+let currentNode = 'start';
+
+function initTree() {
+  dtPath = [];
+  currentNode = 'start';
+  renderNode(tree);
+}
+
+function renderNode(node) {
+  const content = document.getElementById('dt-content');
+  const crumb = document.getElementById('dt-breadcrumb');
+  
+  crumb.innerHTML = dtPath.length > 0
+    ? dtPath.map((p,i) => `<span class="dt-crumb"><span class="dt-crumb-label">${p.q}</span><span class="dt-crumb-sep">›</span><span class="dt-crumb-value">${p.a}</span></span>`).join('')
+    : '<span style="color:var(--text3)">// start of decision tree</span>';
+    
+  if (node.answer) {
+    content.innerHTML = `<div class="dt-answer">
+      <div class="dt-answer-title">${node.title}</div>
+      <div class="dt-answer-body">${node.body}</div>
+      <ul class="dt-steps">
+        ${node.steps.map((s,i) => `<li class="dt-step"><span class="dt-step-num">${i+1}</span><span>${s}</span></li>`).join('')}
+      </ul>
+      <button class="dt-restart" onclick="initTree()">↺ New Situation</button>
+    </div>`;
+    return;
+  }
+  
+  content.innerHTML = `<div class="dt-node">
+    <div class="dt-question">${node.q}</div>
+    ${node.ctx ? `<div class="dt-context">${node.ctx}</div>` : ''}
+    <div class="dt-options">
+      ${node.opts.map(opt => `<button class="dt-opt" onclick="pickOpt('${opt.next}','${opt.label.replace(/'/g,"\\'")}','${node.q.replace(/'/g,"\\'")}')">
+        <span class="dt-opt-icon">${opt.icon}</span>
+        <span>${opt.label}</span>
+      </button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function pickOpt(nextId, label, question) {
+  dtPath.push({ 
+    q: question.substring(0,30) + (question.length > 30 ? '...' : ''), 
+    a: label.substring(0,25) + (label.length > 25 ? '...' : '') 
+  });
+  const nextNode = nodes[nextId] || tree;
+  renderNode(nextNode);
+}
+
+// ===== PIT STRATEGY =====
+function calcPit() {
+  const dur = parseFloat(document.getElementById('pit-duration').value) || 45;
+  const lapSec = parseFloat(document.getElementById('pit-laptime').value) || 62;
+  const pitSec = parseFloat(document.getElementById('pit-pittime').value) || 28;
+  const cond = document.getElementById('pit-cond').value;
+  const wear = parseFloat(document.getElementById('pit-wear').value) || 1.8;
+  const sc = document.getElementById('pit-sc').value;
+  
+  const totalLaps = Math.floor((dur * 60) / lapSec);
+  const tyreLapsRaw = Math.floor(100 / wear);
+  const tyreLaps = Math.max(1, tyreLapsRaw);
+  
+  let stops = Math.ceil(totalLaps / tyreLaps) - 1;
+  if (cond === 'mixed') stops = Math.max(stops, 1);
+  if (sc === 'high') stops = Math.max(stops, 1);
+  
+  let optimalLap = Math.floor(totalLaps / (stops + 1));
+  let windows = [];
+  
+  for (let i = 1; i <= stops; i++) {
+    const base = Math.floor(totalLaps * i / (stops + 1));
+    windows.push({ lap: base, min: Math.max(1, base - 3), max: Math.min(totalLaps - 2, base + 3) });
+  }
+  
+  const scBonus = sc === 'high' ? ' (Likely SC — use it for a free pit stop)' : sc === 'med' ? ' (Possible SC — mind the window)' : '';
+  const segColors = ['#4f8fff','#2dd4bf','#f59e0b','#ef4444'];
+  let segsHtml = '';
+  
+  if (stops === 0) {
+    segsHtml = `<div class="strat-seg" style="flex:1;background:#22c55e"><span class="strat-seg-label">Single Stint — ${totalLaps} laps</span></div>`;
+  } else {
+    const lapsPerStint = Math.floor(totalLaps / (stops + 1));
+    for (let i = 0; i <= stops; i++) {
+      const laps = (i === stops) ? totalLaps - lapsPerStint * stops : lapsPerStint;
+      segsHtml += `<div class="strat-seg" style="flex:${laps};background:${segColors[i % segColors.length]}"><span class="strat-seg-label">S${i+1} ${laps}L</span></div>`;
+      if (i < stops) {
+        segsHtml += `<div style="width:3px;background:var(--bg0)"></div>`;
+      }
+    }
+  }
+
+  let html = `
+    <div class="pit-result-grid">
+      <div class="pit-stat"><div class="pit-stat-label">Total Laps</div><div class="pit-stat-value">${totalLaps}<span class="pit-stat-unit">L</span></div></div>
+      <div class="pit-stat"><div class="pit-stat-label">Est. Stops</div><div class="pit-stat-value">${stops}</div></div>
+      <div class="pit-stat"><div class="pit-stat-label">Optimal Window (L)</div><div class="pit-stat-value">${optimalLap || '-'}<span class="pit-stat-unit">L</span></div></div>
+      <div class="pit-stat"><div class="pit-stat-label">Pit Cost (Approx)</div><div class="pit-stat-value">${pitSec}<span class="pit-stat-unit">s</span></div></div>
+    </div>
+    
+    <div class="card-title">Stint Distribution</div>
+    <div class="strategy-bar">
+      ${segsHtml}
+    </div>
+  `;
+
+  if (stops > 0) {
+    html += `<div class="card-title">Pit Windows ${scBonus}</div><div class="pit-windows">`;
+    windows.forEach((w, idx) => {
+      html += `
+        <div class="pit-window ${sc === 'high' ? 'optimal-window' : ''}">
+          <span class="pit-window-dot" style="background:${segColors[idx % segColors.length]}"></span>
+          <span class="pit-window-label">Stop ${idx + 1}</span>
+          <span class="pit-window-range">Lap ${w.min} to ${w.max}</span>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div style="color:var(--text2);font-size:13px;padding: 10px; background:var(--bg3); border-radius: 6px;">No mandatory stops projected based on current wear for this duration.</div>`;
+  }
+
+  document.getElementById('pit-output').innerHTML = html;
+}
+
+// PAGE INITIALIZERS
+document.addEventListener('DOMContentLoaded', () => {
+  buildHourRows();
+  initTree();
+  calcPit();
+});
+document.getElementById('plan-duration').addEventListener('input', buildHourRows);
+document.getElementById('plan-start').addEventListener('input', buildHourRows);
+
+</script>
+</body>
+</html>
