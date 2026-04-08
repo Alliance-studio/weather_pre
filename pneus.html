@@ -9,10 +9,10 @@
         /* Tipografia de estilo "Racing" / Digital */
         @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&display=swap');
         
-        body {
+        html, body {
             font-family: 'Teko', sans-serif;
             /* Fundo transparente essencial para funcionar como Overlay em cima do jogo */
-            background-color: transparent; 
+            background-color: transparent !important; 
             color: white;
             overflow: hidden; /* Evitar scrollbars no overlay */
         }
@@ -37,7 +37,7 @@
         
         <!-- Cabeçalho -->
         <div class="flex justify-between items-center mb-3 border-b border-gray-600 pb-2">
-            <h1 class="text-2xl font-bold tracking-widest text-gray-300 uppercase">Track Info - 192</h1>
+            <h1 class="text-2xl font-bold tracking-widest text-gray-300 uppercase">Track Info</h1>
             <div id="connection-status" class="w-3 h-3 rounded-full bg-red-500" title="Estado da Ligação"></div>
         </div>
 
@@ -60,7 +60,7 @@
             <div id="tire-recommendation" class="flex flex-col items-center justify-center">
                 <!-- O Pneu Recomendado será injetado aqui pelo JS -->
                 <h2 id="tire-type" class="text-4xl font-bold text-gray-500 text-glow">A CARREGAR</h2>
-                <p id="tire-desc" class="text-sm text-gray-400 mt-1">À espera de dados do iRacing...</p>
+                <p id="tire-desc" class="text-sm text-gray-400 mt-1 text-center">À espera de dados do iRacing...</p>
             </div>
         </div>
 
@@ -86,17 +86,27 @@
 
         let ws;
         let reconnectTimeout;
+        let currentTry = 0;
 
-        // Baseado no URL que forneceste (http://192.168.1.64:8855/...), a porta correta deve ser a 8855.
-        // Se estiveres a correr o overlay no mesmo PC que tem o iRacing, usa 127.0.0.1.
-        // NOTA: Se fores abrir isto num telemóvel ou tablet na tua rede, muda '127.0.0.1' para '192.168.1.64'.
-        const WEBSOCKET_URL = 'ws://127.0.0.1:8855/'; 
+        // Obter IP e Porta dinamicamente da Webview
+        const host = window.location.hostname || '127.0.0.1';
+        const port = window.location.port || '8855';
+        
+        // O Edge Overlays pode expor o WebSocket na root ou em caminhos específicos
+        const endpoints = [
+            `ws://${host}:${port}/`,
+            `ws://${host}:${port}/ws`,
+            `ws://${host}:${port}/api`
+        ];
 
         function connectWebSocket() {
             elConnectionStatus.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse'; // A ligar
             
+            const urlToTry = endpoints[currentTry % endpoints.length];
+            elTireDesc.textContent = `A ligar a: ${urlToTry}`;
+
             try {
-                ws = new WebSocket(WEBSOCKET_URL);
+                ws = new WebSocket(urlToTry);
             } catch (e) {
                 console.error("Erro ao instanciar WebSocket:", e);
                 scheduleReconnect();
@@ -104,8 +114,9 @@
             }
 
             ws.onopen = function() {
-                console.log("Ligado ao servidor de telemetria na porta 8855!");
+                console.log(`Ligado a ${urlToTry}!`);
                 elConnectionStatus.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+                elTireDesc.textContent = "Ligado! A aguardar telemetria...";
                 clearTimeout(reconnectTimeout);
             };
 
@@ -115,8 +126,8 @@
                     // Alguns overlays mandam os dados dentro de um objeto 'data'
                     const telemetry = payload.data ? payload.data : payload; 
                     
-                    // Verificar se o simulador está a correr
-                    if (telemetry.IsOnTrack || telemetry.SessionState !== undefined || telemetry.TrackWetness !== undefined) {
+                    // Verificar se temos dados de telemetria válidos
+                    if (telemetry.TrackTemp !== undefined || telemetry.TrackWetness !== undefined) {
                         processRealTelemetry(telemetry);
                     }
                 } catch (error) {
@@ -127,19 +138,19 @@
             ws.onclose = function() {
                 console.log("Ligação perdida com o servidor de telemetria.");
                 elConnectionStatus.className = 'w-3 h-3 rounded-full bg-red-500';
+                currentTry++; // Tentar o próximo endpoint na lista
                 scheduleReconnect();
             };
 
             ws.onerror = function(error) {
-                console.error("Erro no WebSocket. O Edge Overlays está a correr?", error);
-                ws.close(); // Força o onclose a disparar para tentar reconectar
+                console.error("Erro no WebSocket.", error);
             };
         }
 
         function scheduleReconnect() {
             clearTimeout(reconnectTimeout);
-            // Tenta reconectar a cada 5 segundos
-            reconnectTimeout = setTimeout(connectWebSocket, 5000);
+            // Tenta reconectar a cada 3 segundos
+            reconnectTimeout = setTimeout(connectWebSocket, 3000);
         }
 
         // Dicionário do iRacing SDK para TrackWetness
@@ -158,17 +169,29 @@
             // Capturar Variáveis do SDK
             // Preferência pela TrackTempCrew (temperatura física) se existir, senão TrackTemp normal
             const trackTemp = telemetry.TrackTempCrew !== undefined ? telemetry.TrackTempCrew : telemetry.TrackTemp;
-            const wetnessEnum = telemetry.TrackWetness; // Valor inteiro (0 a 7)
-            const precipitation = telemetry.Precipitation; // Quantidade de chuva a cair
+            const wetnessRaw = telemetry.TrackWetness; 
+            const precipitation = telemetry.Precipitation || 0; // Quantidade de chuva a cair
 
             // Se não tivermos os dados principais, não atualizamos
-            if (wetnessEnum === undefined) return;
+            if (wetnessRaw === undefined) return;
+
+            // Converter para nível numérico caso o Edge Overlays envie texto (ex: "Dry") em vez do Enum (1)
+            let wetnessEnum = 0;
+            if (typeof wetnessRaw === 'string') {
+                const wStr = wetnessRaw.toLowerCase();
+                if (wStr.includes('dry')) wetnessEnum = 1;
+                else if (wStr.includes('damp') || wStr.includes('húmido')) wetnessEnum = 3;
+                else if (wStr.includes('wet') || wStr.includes('molhado')) wetnessEnum = 6;
+                else wetnessEnum = 1;
+            } else {
+                wetnessEnum = wetnessRaw; // Assume que já é número
+            }
 
             const isRaining = precipitation > 0.01; // Tolerância para chuva efetiva
 
             // Atualizar UI com dados reais
             elTrackTemp.textContent = trackTemp ? `${trackTemp.toFixed(1)}°C` : '--°C';
-            elTrackWetness.textContent = WETNESS_STATES[wetnessEnum] || "Desconhecido";
+            elTrackWetness.textContent = typeof wetnessRaw === 'string' ? wetnessRaw : (WETNESS_STATES[wetnessEnum] || "Desconhecido");
 
             // Mostrar/Esconder aviso de chuva
             if (isRaining) {
