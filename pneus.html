@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iRacing Tire Overlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tipografia de estilo "Racing" / Digital */
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Teko', sans-serif;
+            /* Fundo transparente essencial para funcionar como Overlay em cima do jogo */
+            background-color: transparent; 
+            color: white;
+            overflow: hidden; /* Evitar scrollbars no overlay */
+        }
+
+        .overlay-container {
+            /* Estilo do painel: escuro, com blur para facilitar leitura sobre o jogo */
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="p-4 flex items-start justify-start h-screen">
+
+    <!-- Caixa Principal do Overlay -->
+    <div id="tire-overlay" class="overlay-container rounded-r-xl p-4 w-72 transition-all duration-500 ease-in-out border-l-4 border-yellow-400">
+        
+        <!-- Cabeçalho -->
+        <div class="flex justify-between items-center mb-3 border-b border-gray-600 pb-2">
+            <h1 class="text-2xl font-bold tracking-widest text-gray-300 uppercase">Track Info</h1>
+            <div id="connection-status" class="w-3 h-3 rounded-full bg-red-500" title="Estado da Ligação"></div>
+        </div>
+
+        <!-- Dados da Pista -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-gray-800/50 p-2 rounded">
+                <p class="text-gray-400 text-sm uppercase">Pista</p>
+                <p id="track-temp" class="text-xl font-semibold">--°C</p>
+            </div>
+            <div class="bg-gray-800/50 p-2 rounded">
+                <p class="text-gray-400 text-sm uppercase">Estado</p>
+                <p id="track-wetness" class="text-xl font-semibold text-blue-400">Aguardar...</p>
+            </div>
+        </div>
+
+        <!-- O Frontend "Inteligente": Recomendação de Pneu -->
+        <div class="mt-2 text-center p-3 rounded-lg bg-gray-800/80 border border-gray-600">
+            <p class="text-gray-400 text-sm uppercase mb-1">Recomendação de Pneu</p>
+            
+            <div id="tire-recommendation" class="flex flex-col items-center justify-center">
+                <!-- O Pneu Recomendado será injetado aqui pelo JS -->
+                <h2 id="tire-type" class="text-4xl font-bold text-gray-500 text-glow">A CARREGAR</h2>
+                <p id="tire-desc" class="text-sm text-gray-400 mt-1">À espera de dados do iRacing...</p>
+            </div>
+        </div>
+
+        <!-- Indicador de Chuva (Escondido se não chover) -->
+        <div id="rain-warning" class="mt-3 text-center bg-blue-600/30 border border-blue-500 text-blue-200 p-1 rounded hidden animate-pulse">
+            <p class="text-sm">🌧️ Chuva Detetada</p>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // LIGAÇÃO REAL AO EDGE OVERLAYS / iRACING SDK
+        // ==========================================
+
+        const elTrackTemp = document.getElementById('track-temp');
+        const elTrackWetness = document.getElementById('track-wetness');
+        const elTireType = document.getElementById('tire-type');
+        const elTireDesc = document.getElementById('tire-desc');
+        const elOverlayBox = document.getElementById('tire-overlay');
+        const elRainWarning = document.getElementById('rain-warning');
+        const elConnectionStatus = document.getElementById('connection-status');
+
+        let ws;
+        let reconnectTimeout;
+
+        // Tenta ligar ao servidor local do Edge Overlays (por defeito porta 8080 ou 8123)
+        // Se o teu Edge Overlays usar outra porta, deves alterar aqui.
+        const WEBSOCKET_URL = 'ws://127.0.0.1:8080/'; 
+
+        function connectWebSocket() {
+            elConnectionStatus.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse'; // A ligar
+            
+            try {
+                ws = new WebSocket(WEBSOCKET_URL);
+            } catch (e) {
+                console.error("Erro ao instanciar WebSocket:", e);
+                scheduleReconnect();
+                return;
+            }
+
+            ws.onopen = function() {
+                console.log("Ligado ao servidor de telemetria!");
+                elConnectionStatus.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+                clearTimeout(reconnectTimeout);
+            };
+
+            ws.onmessage = function(event) {
+                try {
+                    const payload = JSON.parse(event.data);
+                    // Alguns overlays mandam os dados dentro de um objeto 'data'
+                    const telemetry = payload.data ? payload.data : payload; 
+                    
+                    // Verificar se o simulador está a correr
+                    if (telemetry.IsOnTrack || telemetry.SessionState) {
+                        processRealTelemetry(telemetry);
+                    }
+                } catch (error) {
+                    console.error("Erro ao analisar pacote de dados:", error);
+                }
+            };
+
+            ws.onclose = function() {
+                console.log("Ligação perdida com o servidor de telemetria.");
+                elConnectionStatus.className = 'w-3 h-3 rounded-full bg-red-500';
+                scheduleReconnect();
+            };
+
+            ws.onerror = function(error) {
+                console.error("Erro no WebSocket:", error);
+                ws.close(); // Força o onclose a disparar para tentar reconectar
+            };
+        }
+
+        function scheduleReconnect() {
+            clearTimeout(reconnectTimeout);
+            // Tenta reconectar a cada 5 segundos
+            reconnectTimeout = setTimeout(connectWebSocket, 5000);
+        }
+
+        // Dicionário do iRacing SDK para TrackWetness
+        const WETNESS_STATES = {
+            0: "Desconhecido",
+            1: "Seco",
+            2: "Maioritariamente Seco",
+            3: "Ligeiramente Húmido",
+            4: "Húmido",
+            5: "Moderadamente Molhado",
+            6: "Muito Molhado",
+            7: "Extremamente Molhado"
+        };
+
+        function processRealTelemetry(telemetry) {
+            // Capturar Variáveis do SDK
+            // Preferência pela TrackTempCrew (temperatura física) se existir, senão TrackTemp normal
+            const trackTemp = telemetry.TrackTempCrew !== undefined ? telemetry.TrackTempCrew : telemetry.TrackTemp;
+            const wetnessEnum = telemetry.TrackWetness; // Valor inteiro (0 a 7)
+            const precipitation = telemetry.Precipitation; // Quantidade de chuva a cair
+
+            // Se não tivermos os dados principais, não atualizamos
+            if (wetnessEnum === undefined) return;
+
+            const isRaining = precipitation > 0.01; // Tolerância para chuva efetiva
+
+            // Atualizar UI com dados reais
+            elTrackTemp.textContent = trackTemp ? `${trackTemp.toFixed(1)}°C` : '--°C';
+            elTrackWetness.textContent = WETNESS_STATES[wetnessEnum] || "Desconhecido";
+
+            // Mostrar/Esconder aviso de chuva
+            if (isRaining) {
+                elRainWarning.classList.remove('hidden');
+            } else {
+                elRainWarning.classList.add('hidden');
+            }
+
+            // Lógica de Recomendação de Pneus usando os enums reais do iRacing
+            if (wetnessEnum <= 2) {
+                // 1 (Seco) e 2 (Maioritariamente Seco)
+                setTireUI('SLICKS', 'Pista em boas condições.', 'text-yellow-400', 'border-yellow-400');
+            } 
+            else if (wetnessEnum === 3 || wetnessEnum === 4) {
+                // 3 (Ligeiramente Húmido) e 4 (Húmido) -> ZONA DE CROSSOVER
+                if (isRaining) {
+                    setTireUI('MUDAR P/ WETS', 'Pista a piorar, sê cauteloso.', 'text-orange-400', 'border-orange-400');
+                } else {
+                    setTireUI('CUIDADO (SLICKS)', 'Partes húmidas, manter slicks se a secar.', 'text-orange-400', 'border-orange-400');
+                }
+            } 
+            else if (wetnessEnum >= 5) {
+                // 5 a 7 (Moderadamente Molhado a Extremamente Molhado)
+                setTireUI('WET TIRES', 'Pista molhada. Obrigatório pneus de chuva.', 'text-blue-400', 'border-blue-500');
+            }
+        }
+
+        function setTireUI(type, desc, colorClass, borderClass) {
+            elTireType.textContent = type;
+            elTireDesc.textContent = desc;
+            elTireType.className = `text-4xl font-bold text-glow ${colorClass}`;
+            elOverlayBox.className = `overlay-container rounded-r-xl p-4 w-72 transition-all duration-500 ease-in-out border-l-4 ${borderClass}`;
+        }
+
+        // Iniciar ligação assim que a página carregar
+        connectWebSocket();
+
+    </script>
+</body>
+</html>
