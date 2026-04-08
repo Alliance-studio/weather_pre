@@ -33,10 +33,20 @@
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
-        /* Área de debug escondida por defeito, útil para despiste */
+        /* Área de debug maior e com scroll */
         #debug-log {
             font-family: monospace;
-            font-size: 10px;
+            font-size: 11px;
+            /* Scrollbar fininha para ficar bonito */
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 transparent;
+        }
+        #debug-log::-webkit-scrollbar {
+            width: 4px;
+        }
+        #debug-log::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -78,9 +88,9 @@
             <p class="text-sm">🌧️ Chuva Detetada</p>
         </div>
 
-        <!-- Log de Debug (Para nos ajudar a perceber o erro) -->
-        <div id="debug-log" class="mt-3 text-gray-500 h-12 overflow-hidden leading-tight bg-black/50 p-1 rounded">
-            > Pronto para ligar...
+        <!-- Log de Debug Aumentado (h-48 = 192px, com scroll vertical) -->
+        <div id="debug-log" class="mt-3 text-gray-400 h-48 overflow-y-auto leading-tight bg-black/80 p-2 rounded border border-gray-700">
+            > Pronto para ligar...<br>
         </div>
 
     </div>
@@ -103,30 +113,46 @@
         // ==========================================
         // PRODUTIZAÇÃO: LER DADOS DO URL (LINK)
         // ==========================================
-        // Lê os parâmetros do link. Ex: https://teusite.com/pneus?port=8855&ip=127.0.0.1
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // Assume 127.0.0.1 porque o overlay corre no PC do próprio jogador
         const userIp = urlParams.get('ip') || '127.0.0.1'; 
-        // Permite ao utilizador especificar a porta no link, ou usa 8855 por defeito
         const userPort = urlParams.get('port') || '8855';
 
-        // Lista de URLs a tentar dinamicamente
+        // Lista de URLs a tentar dinamicamente (adicionei mais alguns caminhos comuns de API)
         const endpoints = [
             `ws://${userIp}:${userPort}/`,
             `ws://${userIp}:${userPort}/ws`,
-            `ws://${userIp}:${userPort}/api`
+            `ws://${userIp}:${userPort}/api`,
+            `ws://${userIp}:${userPort}/stream`,
+            `ws://${userIp}:${userPort}/telemetry`
         ];
 
         function logDebug(msg) {
             console.log(msg);
+            // Insere a nova mensagem no topo do log
             elDebugLog.innerHTML = `> ${msg}<br>${elDebugLog.innerHTML}`;
         }
 
-        function connectWebSocket() {
-            // AVISO REMOVIDO: Retirei o bloqueio HTTPS. O Edge Overlays webview deverá permitir 
-            // mixed content nativamente.
+        // NOVO: Escutar eventos de injeção direta de dados (postMessage)
+        // Alguns Overlays injetam a telemetria na WebView sem usar WebSockets
+        window.addEventListener('message', function(event) {
+            try {
+                const payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                const telemetry = payload.data ? payload.data : payload; 
+                
+                if (telemetry && (telemetry.TrackTemp !== undefined || telemetry.TrackWetness !== undefined)) {
+                    // Se recebemos via window message, fechamos o WebSocket para não gastar recursos
+                    if (ws) ws.close();
+                    clearTimeout(reconnectTimeout);
+                    elConnectionStatus.className = 'w-3 h-3 rounded-full bg-green-500';
+                    logDebug("Dados recebidos via PostMessage!");
+                    processRealTelemetry(telemetry);
+                }
+            } catch (error) {
+                // Ignorar eventos de message que não sejam nossos
+            }
+        });
 
+        function connectWebSocket() {
             elConnectionStatus.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse';
             
             const urlToTry = endpoints[currentTry % endpoints.length];
@@ -142,7 +168,7 @@
             }
 
             ws.onopen = function() {
-                logDebug("SUCESSO! Ligado ao servidor local do jogador.");
+                logDebug(`SUCESSO! Ligado a ${urlToTry}`);
                 elConnectionStatus.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
                 elTireDesc.textContent = "Ligado! A aguardar telemetria...";
                 clearTimeout(reconnectTimeout);
@@ -155,21 +181,24 @@
                     
                     if (telemetry.TrackTemp !== undefined || telemetry.TrackWetness !== undefined) {
                         processRealTelemetry(telemetry);
+                    } else {
+                        // Opcional: Descomentar abaixo se quiseres ver os dados todos no log (pode causar lag)
+                        // logDebug(`Recebido pacote vazio/sem info de pista.`);
                     }
                 } catch (error) {
-                    // Ignora erros de parse silenciosamente
+                    // Ignora erros de parse
                 }
             };
 
             ws.onclose = function() {
-                logDebug(`Ligação fechada (${urlToTry}). A tentar outra...`);
+                logDebug(`Ligação fechada (${urlToTry}). A tentar o próximo...`);
                 elConnectionStatus.className = 'w-3 h-3 rounded-full bg-red-500';
                 currentTry++; 
                 scheduleReconnect();
             };
 
             ws.onerror = function(error) {
-                logDebug(`Erro WS. O Edge Overlays está na porta ${userPort}?`);
+                logDebug(`Erro WS (${urlToTry}).`);
             };
         }
 
@@ -225,7 +254,7 @@
                 setTireUI('WET TIRES', 'Obrigatório pneus de chuva.', 'text-blue-400', 'border-blue-500');
             }
             
-            // Ocultar ecrã de log se os dados já estão a fluir
+            // Ocultar ecrã de log se os dados já estão a fluir para não tapar a visão do jogador
             elDebugLog.style.display = 'none';
         }
 
