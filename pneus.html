@@ -79,7 +79,7 @@
             
             <div id="tire-recommendation" class="flex flex-col items-center justify-center">
                 <h2 id="tire-type" class="text-4xl font-bold text-gray-500 text-glow">A CARREGAR</h2>
-                <p id="tire-desc" class="text-sm text-gray-400 mt-1 text-center leading-tight">A iniciar ligação...</p>
+                <p id="tire-desc" class="text-sm text-gray-400 mt-1 text-center leading-tight">A iniciar auto-scan...</p>
             </div>
         </div>
 
@@ -88,9 +88,9 @@
             <p class="text-sm">🌧️ Chuva Detetada</p>
         </div>
 
-        <!-- Log de Debug Aumentado (h-48 = 192px, com scroll vertical) -->
+        <!-- Log de Debug Aumentado -->
         <div id="debug-log" class="mt-3 text-gray-400 h-48 overflow-y-auto leading-tight bg-black/80 p-2 rounded border border-gray-700">
-            > Pronto para ligar...<br>
+            > Pronto para iniciar scan...<br>
         </div>
 
     </div>
@@ -111,36 +111,36 @@
         let currentTry = 0;
 
         // ==========================================
-        // PRODUTIZAÇÃO: LER DADOS DO URL (LINK)
+        // PRODUTIZAÇÃO: AUTO-SCANNER DE PORTAS
         // ==========================================
         const urlParams = new URLSearchParams(window.location.search);
         const userIp = urlParams.get('ip') || '127.0.0.1'; 
-        const userPort = urlParams.get('port') || '8855';
+        const urlPort = urlParams.get('port') || '8855';
 
-        // Lista de URLs a tentar dinamicamente (adicionei mais alguns caminhos comuns de API)
-        const endpoints = [
-            `ws://${userIp}:${userPort}/`,
-            `ws://${userIp}:${userPort}/ws`,
-            `ws://${userIp}:${userPort}/api`,
-            `ws://${userIp}:${userPort}/stream`,
-            `ws://${userIp}:${userPort}/telemetry`
-        ];
+        // Portas mais comuns em SimRacing (SimHub, SDKs custom, Edge Overlays, etc)
+        const portsToTry = [urlPort, '8123', '8080', '8888', '5000'];
+        const pathsToTry = ['/', '/ws', '/api', '/stream'];
+        
+        // Gerar todas as combinações possíveis de Portas + Caminhos
+        const endpoints = [];
+        portsToTry.forEach(p => {
+            pathsToTry.forEach(path => {
+                endpoints.push(`ws://${userIp}:${p}${path}`);
+            });
+        });
 
         function logDebug(msg) {
             console.log(msg);
-            // Insere a nova mensagem no topo do log
             elDebugLog.innerHTML = `> ${msg}<br>${elDebugLog.innerHTML}`;
         }
 
-        // NOVO: Escutar eventos de injeção direta de dados (postMessage)
-        // Alguns Overlays injetam a telemetria na WebView sem usar WebSockets
+        // Escutar eventos de injeção direta de dados (postMessage)
         window.addEventListener('message', function(event) {
             try {
                 const payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 const telemetry = payload.data ? payload.data : payload; 
                 
                 if (telemetry && (telemetry.TrackTemp !== undefined || telemetry.TrackWetness !== undefined)) {
-                    // Se recebemos via window message, fechamos o WebSocket para não gastar recursos
                     if (ws) ws.close();
                     clearTimeout(reconnectTimeout);
                     elConnectionStatus.className = 'w-3 h-3 rounded-full bg-green-500';
@@ -148,7 +148,7 @@
                     processRealTelemetry(telemetry);
                 }
             } catch (error) {
-                // Ignorar eventos de message que não sejam nossos
+                // Ignorar
             }
         });
 
@@ -156,19 +156,20 @@
             elConnectionStatus.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse';
             
             const urlToTry = endpoints[currentTry % endpoints.length];
-            elTireDesc.textContent = `A tentar: ${urlToTry}`;
-            logDebug(`A tentar ligar a: ${urlToTry}`);
+            elTireDesc.textContent = `A procurar na porta ${new URL(urlToTry).port}...`;
+            logDebug(`A testar: ${urlToTry}`);
 
             try {
                 ws = new WebSocket(urlToTry);
             } catch (e) {
-                logDebug(`Exceção: ${e.message}`);
-                scheduleReconnect();
+                logDebug(`Exceção em ${urlToTry}: ${e.message}`);
+                currentTry++;
+                scheduleReconnect(500); // Tentar a próxima rapidamente se falhar logo
                 return;
             }
 
             ws.onopen = function() {
-                logDebug(`SUCESSO! Ligado a ${urlToTry}`);
+                logDebug(`SUCESSO MÁXIMO! Encontrado em: ${urlToTry}`);
                 elConnectionStatus.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
                 elTireDesc.textContent = "Ligado! A aguardar telemetria...";
                 clearTimeout(reconnectTimeout);
@@ -181,30 +182,27 @@
                     
                     if (telemetry.TrackTemp !== undefined || telemetry.TrackWetness !== undefined) {
                         processRealTelemetry(telemetry);
-                    } else {
-                        // Opcional: Descomentar abaixo se quiseres ver os dados todos no log (pode causar lag)
-                        // logDebug(`Recebido pacote vazio/sem info de pista.`);
                     }
                 } catch (error) {
-                    // Ignora erros de parse
+                    // Ignora
                 }
             };
 
             ws.onclose = function() {
-                logDebug(`Ligação fechada (${urlToTry}). A tentar o próximo...`);
+                logDebug(`Fechado: ${urlToTry}`);
                 elConnectionStatus.className = 'w-3 h-3 rounded-full bg-red-500';
                 currentTry++; 
-                scheduleReconnect();
+                scheduleReconnect(1500); // Aguarda um bocado antes de tentar o próximo
             };
 
             ws.onerror = function(error) {
-                logDebug(`Erro WS (${urlToTry}).`);
+                // Apenas avança para a próxima tentativa se der erro
             };
         }
 
-        function scheduleReconnect() {
+        function scheduleReconnect(delay = 3000) {
             clearTimeout(reconnectTimeout);
-            reconnectTimeout = setTimeout(connectWebSocket, 3000);
+            reconnectTimeout = setTimeout(connectWebSocket, delay);
         }
 
         const WETNESS_STATES = {
