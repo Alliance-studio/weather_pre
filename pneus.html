@@ -87,9 +87,10 @@
         let ws;
         let reconnectTimeout;
 
-        // Tenta ligar ao servidor local do Edge Overlays (por defeito porta 8080 ou 8123)
-        // Se o teu Edge Overlays usar outra porta, deves alterar aqui.
-        const WEBSOCKET_URL = 'ws://127.0.0.1:8080/'; 
+        // Baseado no URL que forneceste (http://192.168.1.64:8855/...), a porta correta deve ser a 8855.
+        // Se estiveres a correr o overlay no mesmo PC que tem o iRacing, usa 127.0.0.1.
+        // NOTA: Se fores abrir isto num telemóvel ou tablet na tua rede, muda '127.0.0.1' para '192.168.1.64'.
+        const WEBSOCKET_URL = 'ws://127.0.0.1:8855/'; 
 
         function connectWebSocket() {
             elConnectionStatus.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse'; // A ligar
@@ -103,7 +104,7 @@
             }
 
             ws.onopen = function() {
-                console.log("Ligado ao servidor de telemetria!");
+                console.log("Ligado ao servidor de telemetria na porta 8855!");
                 elConnectionStatus.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
                 clearTimeout(reconnectTimeout);
             };
@@ -115,7 +116,7 @@
                     const telemetry = payload.data ? payload.data : payload; 
                     
                     // Verificar se o simulador está a correr
-                    if (telemetry.IsOnTrack || telemetry.SessionState) {
+                    if (telemetry.IsOnTrack || telemetry.SessionState !== undefined || telemetry.TrackWetness !== undefined) {
                         processRealTelemetry(telemetry);
                     }
                 } catch (error) {
@@ -130,7 +131,7 @@
             };
 
             ws.onerror = function(error) {
-                console.error("Erro no WebSocket:", error);
+                console.error("Erro no WebSocket. O Edge Overlays está a correr?", error);
                 ws.close(); // Força o onclose a disparar para tentar reconectar
             };
         }
